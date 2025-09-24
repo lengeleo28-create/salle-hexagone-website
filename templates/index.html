@@ -1,0 +1,1626 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Salle Hexagone - Site de Présentation</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Liens vers les icônes Flaticon -->
+    <link rel='stylesheet' href='https://cdn-uicons.flaticon.com/2.1.0/uicons-solid-rounded/css/uicons-solid-rounded.css'>
+    <link rel='stylesheet' href='https://cdn-uicons.flaticon.com/2.4.2/uicons-brands/css/uicons-brands.css'>
+    <link rel='stylesheet' href='https://cdn-uicons.flaticon.com/2.4.2/uicons-solid-straight/css/uicons-solid-straight.css'>
+    <style>
+        /* Style personnalisé pour utiliser la police Inter */
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* Correction du problème de superposition : les modales doivent avoir un z-index élevé */
+        .modal {
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+            z-index: 50; /* Augmentation du z-index pour s'assurer qu'il est au-dessus des autres éléments */
+        }
+        .modal.hidden {
+            visibility: hidden;
+            opacity: 0;
+        }
+        
+        /* Styles pour les messages du chat */
+        .chat-message {
+            padding: 8px 12px;
+            border-radius: 10px;
+            margin-bottom: 8px;
+            max-width: 80%;
+            word-wrap: break-word;
+        }
+        .user-message {
+            background-color: #E91E63; /* Rose */
+            color: rgb(255, 255, 255);
+            align-self: flex-end;
+            border-bottom-right-radius: 2px;
+        }
+        .ai-message {
+            background-color: #450303; /* Gris foncé */
+            color: #ffffff;
+            align-self: flex-start;
+            border-bottom-left-radius: 2px;
+        }
+        #chat-log {
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+        
+        /* Style pour l'indicateur de chargement */
+        .loader {
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #E91E63;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            align-self: flex-start;
+            margin: 8px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Styles pour la galerie de photos */
+        .photo-gallery::-webkit-scrollbar {
+            height: 8px;
+        }
+        .photo-gallery::-webkit-scrollbar-thumb {
+            background-color: #e2725b;
+            border-radius: 4px;
+        }
+        .photo-gallery {
+            scrollbar-color: #e2725b transparent;
+            scrollbar-width: thin;
+        }
+        
+        /* Styles pour les flèches de navigation */
+        .gallery-nav-btn {
+            background-color: rgba(255, 127, 80, 0.8);
+            backdrop-filter: blur(5px);
+            border: none;
+            cursor: pointer;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            color: #333;
+            border-radius: 50%;
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 10;
+            transition: background-color 0.2s, transform 0.2s;
+            user-select: none;
+        }
+        .gallery-nav-btn:hover {
+            background-color: rgba(255, 255, 255, 0.9);
+            transform: translateY(-50%) scale(1.1);
+        }
+        .gallery-nav-btn.left {
+            left: 10px;
+        }
+        .gallery-nav-btn.right {
+            right: 10px;
+        }
+        .gallery-container {
+            position: relative;
+        }
+
+        /* Nouveaux styles pour le calendrier */
+        #calendar {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+        }
+        .calendar-day {
+            text-align: center;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+        .calendar-day:not(.reserved):not(.past):hover {
+            background-color: #f0f0f0;
+        }
+        .calendar-day.past {
+            background-color: #f5f5f5;
+            color: #aaa;
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+        .calendar-day.reserved {
+            background-color: #800000; /* Rouge bordeaux */
+            color: white;
+            font-weight: bold;
+            cursor: not-allowed;
+        }
+        .calendar-day.today {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .calendar-header {
+            text-align: center;
+            font-weight: bold;
+            padding: 10px 0;
+        }
+        
+        /* Style pour l'icône Instagram */
+        .instagram-icon {
+            background: radial-gradient(circle at 30% 107%, #fdf497 0%, #fdf497 5%, #fd5949 45%,#d6249f 60%,#285AEB 90%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+    </style>
+</head>
+<body>
+    <!-- Arrière-plan flouté -->
+    <div class="fixed inset-0 bg-cover bg-center -z-10" style="background-image: url('https://i.postimg.cc/7hkLdSmq/6K-2.jpg'); filter: blur(5px);"></div>
+
+    <div class="min-h-screen flex flex-col items-center justify-center p-4">
+
+        <!-- Bannière principale -->
+        <div class="w-full max-w-4xl rounded-xl overflow-hidden relative" style="height: 300px; background-image: url('https://i.postimg.cc/RZ3RVs6Z/6K.jpg'); background-size: cover; background-position: center;">
+            <div class="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent"></div>
+            <div class="relative z-10 text-center px-4 py-8 flex flex-col items-center justify-center h-full text-white">
+                <h1 class="font-bold text-4xl md:text-5xl">
+                    Bienvenue à la<br/>
+                    <span class="block mt-4 text-5xl md:text-6xl">SALLE HEXAGONE</span>
+                </h1>
+                <p class="text-lg pt-4 pb-8">Cliquez sur une rubrique pour en savoir plus.</p>
+            </div>
+        </div>
+
+        <!-- Liens réseaux sociaux -->
+        <div class="w-full max-w-4xl -mt-12 z-20 flex justify-center space-x-2 sm:space-x-4">
+            <a href="https://maps.app.goo.gl/SeHjt48xyDjPqUmQ6" target="_blank" class="block w-16 h-16 sm:w-20 sm:h-20 rounded-full border-4 border-black shadow-lg transform hover:scale-110 transition-transform duration-300 overflow-hidden">
+                <img src="https://i.postimg.cc/G24NWq3Y/Maps.png" alt="Maps" class="w-full h-full object-cover">
+            </a>
+            <a href="https://www.facebook.com/hexagone.n?sfnsn=wa&mibextid=RUbZ1f" target="_blank" class="block w-16 h-16 sm:w-20 sm:h-20 rounded-full border-4 border-black shadow-lg transform hover:scale-110 transition-transform duration-300 overflow-hidden">
+                <img src="https://i.postimg.cc/q7MWLp91/Facebook.png" alt="Facebook" class="w-full h-full object-cover">
+            </a>
+            <a href="https://www.instagram.com/salle_hexagone?utm_source=qr&igsh=eG95ZzMwdGZyZGs=" target="_blank" class="block w-16 h-16 sm:w-20 sm:h-20 rounded-full border-4 border-black shadow-lg transform hover:scale-110 transition-transform duration-300 overflow-hidden">
+                <img src="https://i.postimg.cc/nzN5pBMW/Instagram.png" alt="Insta" class="w-full h-full object-cover">
+            </a>
+            <a href="https://www.tiktok.com/@salle.hexagone.mariage?_t=ZM-8z0ytdU0zto&_r=1" target="_blank" class="block w-16 h-16 sm:w-20 sm:h-20 rounded-full border-4 border-black shadow-lg transform hover:scale-110 transition-transform duration-300 overflow-hidden">
+                <img src="https://i.postimg.cc/mrXJp04B/TikTok.png" alt="TikTok" class="w-full h-full object-cover">
+            </a>
+            <a href="https://wa.me/243997024531" target="_blank" class="block w-16 h-16 sm:w-20 sm:h-20 rounded-full border-4 border-black shadow-lg transform hover:scale-110 transition-transform duration-300 overflow-hidden">
+                <img src="https://i.postimg.cc/VvMh6vCk/Whats-App.png" alt="WhatsApps" class="w-full h-full object-cover">
+            </a>
+        </div>
+
+
+        <!-- Menu principal -->
+        <main class="grid grid-cols-1 md:grid-cols-4 gap-8 w-full max-w-4xl px-4 pb-12 bg-gray-100 rounded-xl mt-4">
+            <!-- NOUVEAU: Bouton Agenda -->
+            <div id="btn-agenda" class="group bg-gray-50 p-8 rounded-xl shadow-lg hover:shadow-2xl transform hover:-translate-y-2 transition-all duration-300 cursor-pointer">
+                <h2 class="text-2xl font-bold text-black mb-3">Agenda de la salle 🗓️</h2>
+                <p class="text-gray-600">Consultez les disponibilités de la salle.</p>
+            </div>
+
+            <div id="btn-services" class="group bg-gray-50 p-8 rounded-xl shadow-lg hover:shadow-2xl transform hover:-translate-y-2 transition-all duration-300 cursor-pointer">
+                <h2 class="text-2xl font-bold text-black mb-3">Nos Informations 📰</h2>
+                <p class="text-gray-600">Découvrez qui nous sommes et ce que nous sommes en mesure de faire pour vous.</p>
+            </div>
+
+            <div id="btn-equipe" class="group bg-gray-50 p-8 rounded-xl shadow-lg hover:shadow-2xl transform hover:-translate-y-2 transition-all duration-300 cursor-pointer">
+                <h2 class="text-2xl font-bold text-black mb-3 flex items-center gap-2"> Nos Packages 🖼️</h2>
+                <p class="text-gray-600">Découvrez les offres qui vous plaisent et qui sont le plus adaptées à votre budget.</p>
+            </div>
+
+            <div id="btn-services-exterieurs" class="group bg-gray-50 p-8 rounded-xl shadow-lg hover:shadow-2xl transform hover:-translate-y-2 transition-all duration-300 cursor-pointer">
+                <h2 class="text-2xl font-bold text-black mb-3">Services Extérieurs 🔗</h2>
+                <p class="text-gray-600">Explorez notre salle sous différents angles et plongez dans l'ambiance de vos événements futurs.</p>
+            </div>
+
+            <div id="btn-contact" class="group bg-gray-50 p-8 rounded-xl shadow-lg hover:shadow-2xl transform hover:-translate-y-2 transition-all duration-300 cursor-pointer md:col-start-2 md:col-span-2">
+                <h2 class="text-2xl font-bold text-black mb-3">Nous Contacter 📧</h2>
+                <p class="text-gray-600">Posez vos questions à notre assistant virtuel ou prenez contact avec nous.</p>
+            </div>
+        </main>
+
+    </div>
+
+    <!-- MODALE: Agenda de la salle -->
+    <div id="modal-agenda" class="modal hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4">
+        <div class="bg-white rounded-lg shadow-2xl max-w-2xl w-full mx-auto flex flex-col max-h-[90vh]">
+            <div class="sticky top-0 bg-white z-10 p-4 sm:p-6 flex items-center justify-between border-b">
+                <button class="close-modal text-red-500 hover:text-red-700 transition-colors" aria-label="Fermer la fenêtre">
+                    <i class="fi fi-sr-home text-2xl sm:text-3xl"></i>
+                </button>
+                <h3 class="text-xl sm:text-3xl font-bold text-black text-right">Agenda de la Salle</h3>
+            </div>
+            <div class="overflow-y-auto p-4 sm:p-6">
+                <div id="calendar-loading" class="text-center text-gray-500">Chargement des disponibilités...</div>
+                <div id="calendar-container" class="hidden">
+                    <div class="flex justify-between items-center mb-4">
+                        <button id="prev-month" class="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300">&lt;</button>
+                        <h4 id="month-year" class="text-xl font-bold"></h4>
+                        <button id="next-month" class="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300">&gt;</button>
+                    </div>
+                    <div class="grid grid-cols-7 gap-2 text-center font-semibold mb-2">
+                        <div>Lun</div><div>Mar</div><div>Mer</div><div>Jeu</div><div>Ven</div><div>Sam</div><div>Dim</div>
+                    </div>
+                    <div id="calendar-body" class="grid grid-cols-7 gap-2">
+                        <!-- Les jours du calendrier seront injectés ici par JS -->
+                    </div>
+                     <div class="mt-4 text-sm text-gray-600">
+                        <div class="flex items-center"><span class="w-4 h-4 rounded-full bg-red-800 mr-2"></span> Date Réservée</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODALE: Nos Informations -->
+    <div id="modal-services" class="modal hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4">
+        <div class="bg-white rounded-lg shadow-2xl max-w-2xl w-full mx-auto flex flex-col max-h-[90vh]">
+            <!-- En-tête de la modale (sticky) -->
+            <div class="sticky top-0 bg-white z-10 p-4 sm:p-6 flex items-center justify-between border-b">
+                <button class="close-modal text-red-500 hover:text-red-700 transition-colors" aria-label="Fermer la fenêtre">
+                    <i class="fi fi-sr-home text-2xl sm:text-3xl"></i>
+                </button>
+                <h3 class="text-xl sm:text-3xl font-bold text-black text-right">Nos Informations</h3>
+            </div>
+            <!-- Contenu de la modale (scrollable) -->
+            <div class="overflow-y-auto p-4 sm:p-6">
+                <p class="mb-4 text-gray-700">Ce qu'il faut savoir :</p>
+                <ul class="list-disc list-inside space-y-2 text-gray-700">
+                    <li><strong>Adresse :</strong> 534 Rte Kipopo, Lubumbashi</li>
+                    <li><strong>Ouvert :</strong> De 9h00' à 17h00' du Lundi au Samedi</li>
+                    <li><strong>Téléphone :</strong> 0997024531</li>
+                </ul>
+                
+                <h4 class="text-xl font-bold text-black mt-6 mb-2">Salle</h4>
+                <ul class="space-y-2 text-gray-700">
+                    <li class="flex items-start space-x-3">
+                        <i class="fi fi-sr-credit-card mt-1 flex-shrink-0" style="color: #4CAF50;"></i>
+                        <a href="#" id="link-pack-standard" class="text-black hover:underline font-semibold">3.000 $ SANS décoration DES TABLES avec chaises Banquet et table pliante.</a>
+                    </li>
+                    <li class="flex items-start space-x-3">
+                        <i class="fi fi-sr-credit-card mt-1 flex-shrink-0" style="color: #CD7F32;"></i>
+                        <a href="#" id="link-pack-bronze" class="text-black hover:underline font-semibold">3.700 $ AVEC décoration DES TABLES avec chaises Banquet et table pliante.</a>
+                    </li>
+                    <li class="flex items-start space-x-3">
+                        <i class="fi fi-sr-credit-card mt-1 flex-shrink-0" style="color: #C0C0C0;"></i>
+                        <a href="#" id="link-pack-silver" class="text-black hover:underline font-semibold">4.000 $ INCLUS décoration DES TABLES, chaises Tiffany et table pliante.</a>
+                    </li>
+                    <li class="flex items-start space-x-3">
+                        <i class="fi fi-sr-credit-card mt-1 flex-shrink-0" style="color: #FFD700;"></i>
+                        <a href="#" id="link-pack-gold" class="text-black hover:underline font-semibold">5.000 $ INCLUS décoration DES TABLES chaises Médaillons et table pliante.</a>
+                    </li>
+                    <li class="flex items-start space-x-3">
+                        <i class="fi fi-sr-credit-card mt-1 flex-shrink-0" style="color: #272d41;"></i>
+                        <a href="#" id="link-pack-platinum" class="text-black hover:underline font-semibold">6.000 $ INCLUS décoration DES TABLES chaises Médaillons et table vitrée.</a>
+                    </li>
+                </ul>
+
+                <h4 class="text-xl font-bold text-black mt-6 mb-2 uppercase">1. Services offerts :</h4>
+                <ul id="services-offerts-list" class="list-decimal list-inside space-y-2 text-gray-700">
+                    <p class="font-bold">※ Appartement pour une nuit uniquement pour les mariés</p>
+                    <li>Décoration à partir du pack à 3.700 $.</li>
+                    <li>Refroidissement inclus.</li>
+                    <li>Sonorisation incluse.</li>
+                    <li>DJ inclus.</li>
+                    <li>Serveur de la salle pour servir la boisson.</li>
+                    <li>2 cleaners pour le nettoyage des toilettes de la salle.</li>
+                    <li>Parking INTÉRIEUR pour plus ou moins 150 véhicules avec sécurité incluse.</li>
+                    <li>Surveillance parking INTÉRIEUR (dans l'enceinte).</li>
+                    <li>Espace EXTÉRIEUR pour la cérémonie Civile, le Cocktail ou le Religieux à partir de 1.000$</li>
+                </ul>
+                <h4 class="text-xl font-bold text-black mt-6 mb-2">NB :</h4>
+                <ul id="services-traiteur-list" class="list-disc list-inside space-y-2 text-gray-700">
+                    <li>La location de la salle inclus 1 à 300 personnes (Invités)</li>
+                    <li>A l'ajout d'une table (10 personnes) c'est + 100$</li>
+                    <li>La réservation se fait moyennant 1000$</li>
+                </ul>
+                <!-- AJUSTEMENT : Remplacement de l'ID par une classe pour le lien -->
+                <h4 class="text-xl font-bold text-black mt-6 mb-2 uppercase">2. Décoration salle incluse : <a href="#" class="link-to-packages-modal text-red-900 hover:underline">VOIR PACKAGE</a></h4>
+                
+                <h4 class="text-xl font-bold text-black mt-6 mb-2 uppercase">3. NOURRITURE (SERVICES TRAITEUR)</h4>
+                <p class="text-gray-700 mb-4">
+                Nos plats / Personnes 12$ - 15$ - 17$
+                <br>Entrées nourritures EXTÉRIEUR 2$ / Personnes 
+                    <br>Si la nourriture vient de l'extérieur. 
+                </p>
+                <div class="text-center mt-4">
+                    <h5 class="text-lg font-semibold text-black mb-2">Contact</h5>
+                    <!-- MODIFICATION: Ajout des icônes Facebook -->
+                    <div class="flex items-center justify-center space-x-6">
+                        <a href="https://wa.me/243990525313" target="_blank" title="Contacter sur WhatsApp" class="text-green-600 hover:text-green-800 transition-transform transform hover:scale-110">
+                            <i class="fi fi-brands-whatsapp" style="font-size: 2rem;"></i>
+                        </a>
+                        <a href="tel:+243990525313" title="Appeler le service traiteur" class="text-blue-600 hover:text-blue-800 transition-transform transform hover:scale-110">
+                            <i class="fi fi-sr-phone-call" style="font-size: 2rem;"></i>
+                        </a>
+                        <a href="https://web.facebook.com/profile.php?id=100063589300348&mibextid=wwXIfr&rdid=HFpDvA4POEZqILwB#" target="_blank" title="Voir sur Facebook" class="hover:opacity-80 transition-transform transform hover:scale-110">
+                            <i class="fi fi-brands-facebook" style="font-size: 2rem; color: #1877F2;"></i>
+                        </a>
+                        <a href="https://www.tiktok.com/@votre-compte-traiteur" target="_blank" title="Voir sur TikTok" class="text-black hover:text-gray-700 transition-transform transform hover:scale-110">
+                            <i class="fi fi-brands-tik-tok" style="font-size: 2rem;"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <h4 class="text-xl font-bold text-black mt-6 mb-2 uppercase">4. GÂTEAU</h4>
+                <p class="text-gray-700 mb-4">
+                    Contactez notre partenaire pâtissier pour créer le gâteau de mariage de vos rêves.
+                </p>
+                <div class="text-center mt-4">
+                    <h5 class="text-lg font-semibold text-black mb-2">Contact</h5>
+                    <!-- MODIFICATION: Ajout des icônes Facebook et Instagram -->
+                    <div class="flex items-center justify-center space-x-6">
+                         <a href="https://wa.me/243856271272" target="_blank" title="Contacter sur WhatsApp pour le gâteau" class="text-green-600 hover:text-green-800 transition-transform transform hover:scale-110">
+                            <i class="fi fi-brands-whatsapp" style="font-size: 2rem;"></i>
+                        </a>
+                         <a href="tel:+243856271272" title="Appeler pour le gâteau" class="text-blue-600 hover:text-blue-800 transition-transform transform hover:scale-110">
+                            <i class="fi fi-sr-phone-call" style="font-size: 2rem;"></i>
+                        </a>
+                        <a href="https://www.facebook.com/share/1BM57d9szV/" target="_blank" title="Voir sur Facebook" class="hover:opacity-80 transition-transform transform hover:scale-110">
+                            <i class="fi fi-brands-facebook" style="font-size: 2rem; color: #1877F2;"></i>
+                        </a>
+                        <a href="https://www.instagram.com/ines_le_gateau_?igsh=MTdzejZ2MXVpeWZ6Yg==" target="_blank" title="Voir sur Instagram" class="hover:opacity-80 transition-transform transform hover:scale-110">
+                            <i class="fi fi-brands-instagram instagram-icon" style="font-size: 2rem;"></i>
+                        </a>
+                        <a href="https://www.tiktok.com/@ines_le_gateau?_t=ZM-8zCXKJLawKe&_r=1" target="_blank" title="Voir sur TikTok" class="text-black hover:text-gray-700 transition-transform transform hover:scale-110">
+                            <i class="fi fi-brands-tik-tok" style="font-size: 2rem;"></i>
+                        </a>
+                    </div>
+                </div>
+                <!-- AJUSTEMENT : Remplacement de l'ID par une classe pour le lien -->
+                <h4 class="text-xl font-bold text-black mt-6 mb-2 uppercase">5. ESPACES EXTÉRIEURs : <a href="#" class="link-to-exterieurs-modal text-blue-700 hover:underline">Voir "SERVICES EXTÉRIEURS" (Menu Principal)</a></h4>
+                <p class="text-gray-700 mb-4">
+                A l'ajout de 1.000 $
+                </p>
+                <p class="text-xl font-bold text-black mt-6 mb-2 uppercase">
+                    Pour vous y rendre, vous pouvez utiliser ce lien vers Google Maps :
+                    <a href="https://maps.app.goo.gl/SeHjt48xyDjPqUmQ6" target="_blank" class="text-indigo-600 hover:underline font-semibold">
+                        Voir sur la carte
+                    </a>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODALE: Nos Packages -->
+    <div id="modal-equipe" class="modal hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4">
+        <div class="bg-white rounded-lg shadow-2xl max-w-2xl w-full mx-auto flex flex-col max-h-[90vh]">
+            <div class="sticky top-0 bg-white z-10 p-4 sm:p-6 flex items-center justify-between border-b">
+                <button class="close-modal text-red-500 hover:text-red-700 transition-colors" aria-label="Fermer la fenêtre">
+                    <i class="fi fi-sr-home text-2xl sm:text-3xl"></i>
+                </button>
+                <h3 class="text-xl sm:text-3xl font-bold text-black text-right flex items-center gap-2">
+                    Nos Packages
+                    <i class="fi fi-ss-rose-alt inline-block bg-gradient-to-r from-pink-500 via-red-500 to-yellow-500 bg-clip-text text-transparent"></i>
+                </h3>
+            </div>
+            <div class="overflow-y-auto p-4 sm:p-6">
+                <div class="grid grid-cols-1 gap-4">
+                    <button id="btn-pack-standard" class="p-4 bg-green-200 rounded-lg text-black text-left shadow-lg transform hover:scale-105 transition-transform duration-300">
+                        <h4 class="text-xl font-semibold">Pack Standard</h4>
+                        <p class="text-2xl font-bold mt-2">3.000 $</p>
+                    </button>
+                    <button id="btn-pack-bronze" class="p-4 bg-gradient-to-br from-amber-700 via-yellow-800 to-amber-900 rounded-lg text-white text-left shadow-lg transform hover:scale-105 transition-transform duration-300">
+                        <h4 class="text-xl font-semibold">Pack Bronze</h4>
+                        <p class="text-2xl font-bold mt-2">3.700 $</p>
+                    </button>
+                    <button id="btn-pack-silver" class="p-4 bg-gradient-to-br from-slate-300 via-gray-400 to-slate-500 rounded-lg text-black text-left shadow-lg transform hover:scale-105 transition-transform duration-300">
+                        <h4 class="text-xl font-semibold">Pack Silver</h4>
+                        <p class="text-2xl font-bold mt-2">4.000 $</p>
+                    </button>
+                    <button id="btn-pack-gold" class="p-4 bg-gradient-to-br from-yellow-300 via-amber-400 to-yellow-500 rounded-lg text-gray-800 text-left shadow-lg transform hover:scale-105 transition-transform duration-300">
+                        <h4 class="text-xl font-semibold text-black">Pack Gold</h4>
+                        <p class="text-2xl font-bold mt-2">5.000 $</p>
+                    </button>
+                    <button id="btn-pack-platinum" class="p-4 bg-gradient-to-br from-slate-100 via-gray-200 to-slate-400 rounded-lg text-black text-left shadow-lg transform hover:scale-105 transition-transform duration-300">
+                        <h4 class="text-xl font-semibold">Pack Platinum</h4>
+                        <p class="text-2xl font-bold mt-2">6.000 $</p>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODALE: Assistant Virtuel -->
+    <div id="modal-contact" class="modal hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4">
+        <div class="bg-white rounded-lg shadow-2xl w-full max-w-2xl mx-auto flex flex-col h-[calc(100vh-4rem)] md:h-[500px]">
+            <div class="sticky top-0 bg-white z-10 p-4 sm:p-6 flex items-center justify-between border-b flex-shrink-0">
+                <button class="close-modal text-red-500 hover:text-red-700 transition-colors" aria-label="Fermer la fenêtre">
+                    <i class="fi fi-sr-home text-2xl sm:text-3xl"></i>
+                </button>
+                <h3 class="text-xl sm:text-3xl font-bold text-black text-right">Assistant Virtuel ✨</h3>
+            </div>
+            <div id="chat-log" class="flex-grow bg-gray-100 p-4 overflow-y-auto"></div>
+            <div class="flex-shrink-0 flex gap-2 p-4 border-t">
+                <input type="text" id="chat-input" placeholder="Posez votre question ici..." class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-rose-500 focus:border-rose-500">
+                <button id="chat-send" class="bg-rose-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-rose-700 transition-colors">Envoyer</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODALES POUR CHAQUE PACK -->
+    <!-- MODALE: Pack Standard -->
+    <div id="modal-pack-standard" class="modal hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4">
+        <div class="bg-white rounded-lg shadow-2xl max-w-4xl w-full mx-auto flex flex-col max-h-[90vh]">
+            <div class="sticky top-0 bg-white z-10 p-4 sm:p-6 flex items-center justify-between border-b">
+                <button class="close-modal text-red-500 hover:text-red-700 transition-colors" aria-label="Fermer la fenêtre">
+                    <i class="fi fi-sr-home text-2xl sm:text-3xl"></i>
+                </button>
+                <h3 class="text-xl sm:text-3xl font-bold text-black text-right">Pack Standard</h3>
+            </div>
+            <div class="overflow-y-auto p-4 sm:p-6">
+                <div class="gallery-container">
+                    <div id="gallery-standard" class="photo-gallery flex overflow-x-auto snap-x snap-mandatory space-x-4 pb-4">
+                        <img src="https://i.postimg.cc/dV3qz6S5/Salle-3k-01.jpg" alt="Photo 1 de la salle" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">
+                        <img src="https://i.postimg.cc/bYTNZQjM/S3k-01.jpg" alt="Photo 1 de la salle" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">
+                        <img src="https://i.postimg.cc/PJfG1fgS/Salle-3k-02.jpg" alt="Photo 2 de la salle" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">
+                        <img src="https://i.postimg.cc/bNwYksyv/S3k-02.jpg" alt="Photo 1 de la salle" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">
+                        <img src="https://i.postimg.cc/52Kt0TCc/Salle-3k-03.jpg" alt="Photo 3 de la salle" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">
+                        <img src="https://i.postimg.cc/BQ7Sg4bB/S3k-03.jpg" alt="Photo 1 de la salle" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">
+                        <img src="https://i.postimg.cc/dV3qz6S5/Salle-3k-01.jpg" alt="Photo 4 de la salle" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">
+                    </div>
+                    <button class="gallery-nav-btn left" data-target="gallery-standard">‹</button>
+                    <button class="gallery-nav-btn right" data-target="gallery-standard">›</button>
+                </div>
+                <!-- MODIFICATION: Ajout de la galerie Matériel -->
+                <div class="gallery-container mt-8">
+                    <h4 class="text-xl font-semibold text-black mb-2">Matériel</h4>
+                    <div id="gallery-standard-2" class="photo-gallery flex overflow-x-auto snap-x snap-mandatory space-x-4 pb-4">
+                        <img src="https://i.postimg.cc/fRP3X5tg/Chaise-avec-housse.png" alt="Chaises" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">
+                        <img src="https://i.postimg.cc/sXdvHXJY/Table-pliante.png" alt="Table pliante" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">
+                        <img src="https://i.postimg.cc/zGYrn9Vd/Verre-d-eau.png" alt="Table pliante" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">
+
+                    </div>
+                    <button class="gallery-nav-btn left" data-target="gallery-standard-2">‹</button>
+                    <button class="gallery-nav-btn right" data-target="gallery-standard-2">›</button>
+                </div>
+                <div class="mt-6">
+                    <h4 class="text-xl font-semibold text-black mb-2">Détails inclus :</h4>
+                    <ul class="list-disc list-inside space-y-1 text-gray-700">
+                        <li>Chaise de conférence</li>
+                        <li>Tables rondes</li>
+                        <li>Nappes</li>
+                        <li>Tapis rouge</li>
+                        <li>Serviette en papier</li>
+                    </ul>
+                </div>
+                <div class="mt-6">
+                    <h4 class="text-xl font-semibold text-black mb-2">Services offerts :</h4>
+                    <div class="services-offerts-content text-gray-700"></div>
+                </div>
+
+                <!-- DÉBUT: Section d'informations ajoutée -->
+                <div class="mt-6 border-t pt-6 space-y-6">
+                    <div>
+                        <h4 class="text-xl font-bold text-black mb-2">NB :</h4>
+                        <ul class="list-disc list-inside space-y-2 text-gray-700">
+                            <li>La location de la salle inclus 1 à 300 personnes (Invités)</li>
+                            <li>A l'ajout d'une table (10 personnes) c'est + 100$</li>
+                            <li>La réservation se fait moyennant 1000$</li>
+                        </ul>
+                    </div>
+                
+                    <div>
+                        <h4 class="text-xl font-bold text-black mb-2 uppercase">Décoration salle incluse : <a href="#" class="link-to-packages-modal text-red-900 hover:underline">VOIR PACKAGE</a></h4>
+                    </div>
+                    
+                    <div>
+                        <h4 class="text-xl font-bold text-black mb-2 uppercase">NOURRITURE (SERVICES TRAITEUR)</h4>
+                        <p class="text-gray-700 mb-4">
+                        Nos plats / Personnes 12$ - 15$ - 17$
+                        <br>Entrées nourritures EXTÉRIEUR 2$ / Personnes 
+                            <br>Si la nourriture vient de l'extérieur. 
+                        </p>
+                        <div class="text-center mt-4">
+                            <h5 class="text-lg font-semibold text-black mb-2">Contact</h5>
+                            <div class="flex items-center justify-center space-x-6">
+                                <a href="https://wa.me/243990525313" target="_blank" title="Contacter sur WhatsApp" class="text-green-600 hover:text-green-800 transition-transform transform hover:scale-110">
+                                    <i class="fi fi-brands-whatsapp" style="font-size: 2rem;"></i>
+                                </a>
+                                <a href="tel:+243990525313" title="Appeler le service traiteur" class="text-blue-600 hover:text-blue-800 transition-transform transform hover:scale-110">
+                                    <i class="fi fi-sr-phone-call" style="font-size: 2rem;"></i>
+                                </a>
+                                <a href="https://web.facebook.com/profile.php?id=100063589300348&mibextid=wwXIfr&rdid=HFpDvA4POEZqILwB#" target="_blank" title="Voir sur Facebook" class="hover:opacity-80 transition-transform transform hover:scale-110">
+                                    <i class="fi fi-brands-facebook" style="font-size: 2rem; color: #1877F2;"></i>
+                                </a>
+                                <a href="https://www.tiktok.com/@votre-compte-traiteur" target="_blank" title="Voir sur TikTok" class="text-black hover:text-gray-700 transition-transform transform hover:scale-110">
+                                    <i class="fi fi-brands-tik-tok" style="font-size: 2rem;"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                
+                    <div>
+                        <h4 class="text-xl font-bold text-black mb-2 uppercase">GÂTEAU</h4>
+                        <p class="text-gray-700 mb-4">
+                            Contactez notre partenaire pâtissier pour créer le gâteau de mariage de vos rêves.
+                        </p>
+                        <div class="text-center mt-4">
+                            <h5 class="text-lg font-semibold text-black mb-2">Contact</h5>
+                            <div class="flex items-center justify-center space-x-6">
+                                 <a href="https://wa.me/243856271272" target="_blank" title="Contacter sur WhatsApp pour le gâteau" class="text-green-600 hover:text-green-800 transition-transform transform hover:scale-110">
+                                    <i class="fi fi-brands-whatsapp" style="font-size: 2rem;"></i>
+                                </a>
+                                 <a href="tel:+243856271272" title="Appeler pour le gâteau" class="text-blue-600 hover:text-blue-800 transition-transform transform hover:scale-110">
+                                    <i class="fi fi-sr-phone-call" style="font-size: 2rem;"></i>
+                                </a>
+                                <a href="https://www.facebook.com/share/1BM57d9szV/" target="_blank" title="Voir sur Facebook" class="hover:opacity-80 transition-transform transform hover:scale-110">
+                                    <i class="fi fi-brands-facebook" style="font-size: 2rem; color: #1877F2;"></i>
+                                </a>
+                                <a href="https://www.instagram.com/ines_le_gateau_?igsh=MTdzejZ2MXVpeWZ6Yg==" target="_blank" title="Voir sur Instagram" class="hover:opacity-80 transition-transform transform hover:scale-110">
+                                    <i class="fi fi-brands-instagram instagram-icon" style="font-size: 2rem;"></i>
+                                </a>
+                                <a href="https://www.tiktok.com/@ines_le_gateau?_t=ZM-8zCXKJLawKe&_r=1" target="_blank" title="Voir sur TikTok" class="text-black hover:text-gray-700 transition-transform transform hover:scale-110">
+                                    <i class="fi fi-brands-tik-tok" style="font-size: 2rem;"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                
+                    <div>
+                        <h4 class="text-xl font-bold text-black mb-2 uppercase">ESPACES EXTÉRIEURS : <a href="#" class="link-to-exterieurs-modal text-blue-700 hover:underline">Voir "SERVICES EXTÉRIEURS" (Menu Principal)</a></h4>
+                        <p class="text-gray-700">
+                        A l'ajout de 1.000 $
+                        </p>
+                    </div>
+                </div>
+                <!-- FIN: Section d'informations ajoutée -->
+
+            </div>
+        </div>
+    </div>
+
+    <!-- MODALE: Pack Bronze -->
+    <div id="modal-pack-bronze" class="modal hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4">
+        <div class="bg-white rounded-lg shadow-2xl max-w-4xl w-full mx-auto flex flex-col max-h-[90vh]">
+            <div class="sticky top-0 bg-white z-10 p-4 sm:p-6 flex items-center justify-between border-b">
+                <button class="close-modal text-red-500 hover:text-red-700 transition-colors" aria-label="Fermer la fenêtre">
+                    <i class="fi fi-sr-home text-2xl sm:text-3xl"></i>
+                </button>
+                <h3 class="text-xl sm:text-3xl font-bold text-black text-right">Pack Bronze</h3>
+            </div>
+            <div class="overflow-y-auto p-4 sm:p-6">
+                <div class="gallery-container">
+                    <div id="gallery-bronze" class="photo-gallery flex overflow-x-auto snap-x snap-mandatory space-x-4 pb-4">
+                        <img src="https://i.postimg.cc/rsTnv8M5/Salle-3-7k-01.jpg" alt="Photo 1 du Pack Bronze" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">
+                        <img src="https://i.postimg.cc/KYrC0DQh/IMG-20250828-WA0044.jpg" alt="Photo 1 du Pack Bronze" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">
+                        <img src="https://i.postimg.cc/NF8VMKpN/Salle-3-7k-02.jpg" alt="Photo 2 du Pack Bronze" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">
+                        <img src="https://i.postimg.cc/G2LVVTS8/IMG-20250828-WA0046.jpg" alt="Photo 1 du Pack Bronze" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">
+                        <img src="https://i.postimg.cc/vH8RrKFM/Whats-App-Image-2025-07-28-14-20-00-3c3f3847.jpg" alt="Photo 2 du Pack Bronze" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">
+                        <img src="https://i.postimg.cc/tJ7fCQb9/IMG-20250828-WA0047.jpg" alt="Photo 1 du Pack Bronze" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">
+                        <img src="https://i.postimg.cc/65MkYhtZ/Whats-App-Image-2025-07-28-14-20-00-bc7ab981.jpg" alt="Photo 2 du Pack Bronze" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">
+                        <img src="https://i.postimg.cc/1t37JhfD/IMG-20250828-WA0048.jpg" alt="Photo 1 du Pack Bronze" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">
+                        <img src="https://i.postimg.cc/134LTN3j/Whats-App-Image-2025-07-28-14-20-01-04b29bfb.jpg" alt="Photo 2 du Pack Bronze" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">
+                        <img src="https://i.postimg.cc/bvjK0BxR/IMG-20250828-WA0049.jpg" alt="Photo 1 du Pack Bronze" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">                        
+                    </div>
+                    <button class="gallery-nav-btn left" data-target="gallery-bronze">‹</button>
+                    <button class="gallery-nav-btn right" data-target="gallery-bronze">›</button>
+                </div>
+                <!-- MODIFICATION: Ajout de la galerie Matériel -->
+                <div class="gallery-container mt-8">
+                    <h4 class="text-xl font-semibold text-black mb-2">Matériel</h4>
+                    <div id="gallery-bronze-2" class="photo-gallery flex overflow-x-auto snap-x snap-mandatory space-x-4 pb-4">
+                        <img src="https://i.postimg.cc/fRP3X5tg/Chaise-avec-housse.png" alt="Chaises" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">
+                        <img src="https://i.postimg.cc/sXdvHXJY/Table-pliante.png" alt="Table pliante" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">
+                        <img src="https://i.postimg.cc/BnbLXR6K/Sceau-champagne.png" alt="Sceau-champagne" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">
+                        <img src="https://i.postimg.cc/NfmMq8Xz/Changelier-02.png" alt="Chandelier" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">
+                        <img src="https://i.postimg.cc/SQXRVbxq/Changelier-04.png" alt="Chandelier" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">
+                        <img src="https://i.postimg.cc/wBfxcwK7/Changelier-01.png" alt="Chandelier" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">
+                        <img src="https://i.postimg.cc/9fFF7vn6/P-tales-de-fleurs.png" alt="fleurs" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">
+                        <img src="https://i.postimg.cc/zGYrn9Vd/Verre-d-eau.png" alt="Verre-d-eau" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">
+                        <img src="https://i.postimg.cc/LsZJVfj4/Sous-plat-dor.png" alt="Sous-plat-dor" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">
+                        <img src="https://i.postimg.cc/kXfRM7nC/Couverts.png" alt="Couverts argenté" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">
+
+                    </div>
+                    <button class="gallery-nav-btn left" data-target="gallery-bronze-2">‹</button>
+                    <button class="gallery-nav-btn right" data-target="gallery-bronze-2">›</button>
+                </div>
+                <div class="mt-6">
+                    <h4 class="text-xl font-semibold text-black mb-2">Détails inclus :</h4>
+                    <ul class="list-disc list-inside space-y-1 text-gray-700">
+                        <li>Chaise de conférence</li>
+                        <li>Tables rondes</li>
+                        <li>Nappes</li>
+                        <li>Tapis rouge</li>
+                        <li>Serviette en papier</li>
+                        <li>Une décoration simple, mais efficace</li>                        
+                    </ul>
+                </div>
+                <div class="mt-6">
+                    <h4 class="text-xl font-semibold text-black mb-2">Services offerts :</h4>
+                    <div class="services-offerts-content text-gray-700"></div>
+                </div>
+
+                <!-- DÉBUT: Section d'informations ajoutée -->
+                <div class="mt-6 border-t pt-6 space-y-6">
+                    <div>
+                        <h4 class="text-xl font-bold text-black mb-2">NB :</h4>
+                        <ul class="list-disc list-inside space-y-2 text-gray-700">
+                            <li>La location de la salle inclus 1 à 300 personnes (Invités)</li>
+                            <li>A l'ajout d'une table (10 personnes) c'est + 100$</li>
+                            <li>La réservation se fait moyennant 1000$</li>
+                        </ul>
+                    </div>
+                
+                    <div>
+                        <h4 class="text-xl font-bold text-black mb-2 uppercase">Décoration salle incluse : <a href="#" class="link-to-packages-modal text-red-900 hover:underline">VOIR PACKAGE</a></h4>
+                    </div>
+                    
+                    <div>
+                        <h4 class="text-xl font-bold text-black mb-2 uppercase">NOURRITURE (SERVICES TRAITEUR)</h4>
+                        <p class="text-gray-700 mb-4">
+                        Nos plats / Personnes 12$ - 15$ - 17$
+                        <br>Entrées nourritures EXTÉRIEUR 2$ / Personnes 
+                            <br>Si la nourriture vient de l'extérieur. 
+                        </p>
+                        <div class="text-center mt-4">
+                            <h5 class="text-lg font-semibold text-black mb-2">Contact</h5>
+                            <div class="flex items-center justify-center space-x-6">
+                                <a href="https://wa.me/243990525313" target="_blank" title="Contacter sur WhatsApp" class="text-green-600 hover:text-green-800 transition-transform transform hover:scale-110">
+                                    <i class="fi fi-brands-whatsapp" style="font-size: 2rem;"></i>
+                                </a>
+                                <a href="tel:+243990525313" title="Appeler le service traiteur" class="text-blue-600 hover:text-blue-800 transition-transform transform hover:scale-110">
+                                    <i class="fi fi-sr-phone-call" style="font-size: 2rem;"></i>
+                                </a>
+                                <a href="https://web.facebook.com/profile.php?id=100063589300348&mibextid=wwXIfr&rdid=HFpDvA4POEZqILwB#" target="_blank" title="Voir sur Facebook" class="hover:opacity-80 transition-transform transform hover:scale-110">
+                                    <i class="fi fi-brands-facebook" style="font-size: 2rem; color: #1877F2;"></i>
+                                </a>
+                                <a href="https://www.tiktok.com/@votre-compte-traiteur" target="_blank" title="Voir sur TikTok" class="text-black hover:text-gray-700 transition-transform transform hover:scale-110">
+                                    <i class="fi fi-brands-tik-tok" style="font-size: 2rem;"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                
+                    <div>
+                        <h4 class="text-xl font-bold text-black mb-2 uppercase">GÂTEAU</h4>
+                        <p class="text-gray-700 mb-4">
+                            Contactez notre partenaire pâtissier pour créer le gâteau de mariage de vos rêves.
+                        </p>
+                        <div class="text-center mt-4">
+                            <h5 class="text-lg font-semibold text-black mb-2">Contact</h5>
+                            <div class="flex items-center justify-center space-x-6">
+                                 <a href="https://wa.me/243856271272" target="_blank" title="Contacter sur WhatsApp pour le gâteau" class="text-green-600 hover:text-green-800 transition-transform transform hover:scale-110">
+                                    <i class="fi fi-brands-whatsapp" style="font-size: 2rem;"></i>
+                                </a>
+                                 <a href="tel:+243856271272" title="Appeler pour le gâteau" class="text-blue-600 hover:text-blue-800 transition-transform transform hover:scale-110">
+                                    <i class="fi fi-sr-phone-call" style="font-size: 2rem;"></i>
+                                </a>
+                                <a href="https://www.facebook.com/share/1BM57d9szV/" target="_blank" title="Voir sur Facebook" class="hover:opacity-80 transition-transform transform hover:scale-110">
+                                    <i class="fi fi-brands-facebook" style="font-size: 2rem; color: #1877F2;"></i>
+                                </a>
+                                <a href="https://www.instagram.com/ines_le_gateau_?igsh=MTdzejZ2MXVpeWZ6Yg==" target="_blank" title="Voir sur Instagram" class="hover:opacity-80 transition-transform transform hover:scale-110">
+                                    <i class="fi fi-brands-instagram instagram-icon" style="font-size: 2rem;"></i>
+                                </a>
+                                <a href="https://www.tiktok.com/@ines_le_gateau?_t=ZM-8zCXKJLawKe&_r=1" target="_blank" title="Voir sur TikTok" class="text-black hover:text-gray-700 transition-transform transform hover:scale-110">
+                                    <i class="fi fi-brands-tik-tok" style="font-size: 2rem;"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                
+                    <div>
+                        <h4 class="text-xl font-bold text-black mb-2 uppercase">ESPACES EXTÉRIEURS : <a href="#" class="link-to-exterieurs-modal text-blue-700 hover:underline">Voir "SERVICES EXTÉRIEURS" (Menu Principal)</a></h4>
+                        <p class="text-gray-700">
+                        A l'ajout de 1.000 $
+                        </p>
+                    </div>
+                </div>
+                <!-- FIN: Section d'informations ajoutée -->
+            </div>
+        </div>
+    </div>
+
+    <!-- MODALE: Pack Silver -->
+    <div id="modal-pack-silver" class="modal hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4">
+        <div class="bg-white rounded-lg shadow-2xl max-w-4xl w-full mx-auto flex flex-col max-h-[90vh]">
+            <div class="sticky top-0 bg-white z-10 p-4 sm:p-6 flex items-center justify-between border-b">
+                <button class="close-modal text-red-500 hover:text-red-700 transition-colors" aria-label="Fermer la fenêtre">
+                    <i class="fi fi-sr-home text-2xl sm:text-3xl"></i>
+                </button>
+                <h3 class="text-xl sm:text-3xl font-bold text-black text-right">Pack Silver</h3>
+            </div>
+            <div class="overflow-y-auto p-4 sm:p-6">
+                <div class="gallery-container">
+                    <div id="gallery-silver" class="photo-gallery flex overflow-x-auto snap-x snap-mandatory space-x-4 pb-4">
+                        <img src="https://i.postimg.cc/mD36w317/Salle-4k-02.jpg" alt="Photo 3 du Pack Silver" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">*
+                        <img src="https://i.postimg.cc/43GwqjN2/IMG-20250729-WA0014.jpg" alt="Photo 3 du Pack Silver" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">*
+                        <img src="https://i.postimg.cc/9MHnZg0W/Salle-4k-01.jpg" alt="Photo 1 du Pack Silver" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">
+                        <img src="https://i.postimg.cc/MKcsQyF5/IMG-20250830-WA0006.jpg" alt="Photo 3 du Pack Silver" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">*
+                        <img src="https://i.postimg.cc/WpDPMVwv/km-2025-15-sur-36.jpg" alt="Photo 2 du Pack Silver" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">
+                        <img src="https://i.postimg.cc/YqJdfvcH/IMG-20250830-WA0007.jpg" alt="Photo 3 du Pack Silver" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">*
+                        <img src="https://i.postimg.cc/v8pwhK06/km-2025-16-sur-36.jpg" alt="Photo 2 du Pack Silver" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">
+                        <img src="https://i.postimg.cc/mD36w317/Salle-4k-02.jpg" alt="Photo 3 du Pack Silver" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">*
+                        <img src="https://i.postimg.cc/0Nw4618W/Salle-4k-01-1.jpg" alt="Photo 2 du Pack Silver" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">
+                        <img src="https://i.postimg.cc/C1FPBX3n/IMG-20250830-WA0008.jpg" alt="Photo 3 du Pack Silver" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">*
+                        <img src="https://i.postimg.cc/44WMt4Nf/IMG-20250830-WA0012.jpg" alt="Photo 3 du Pack Silver" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">*
+                        <img src="https://i.postimg.cc/D0NBNZ81/IMG-20250830-WA0011.jpg" alt="Photo 3 du Pack Silver" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">*
+                        <img src="https://i.postimg.cc/xCtsKgQx/IMG-20250830-WA0009.jpg" alt="Photo 3 du Pack Silver" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">*
+                        <img src="https://i.postimg.cc/QdTnRpgC/IMG-20250830-WA0013.jpg" alt="Photo 3 du Pack Silver" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">*
+                        <img src="https://i.postimg.cc/d335ndtq/IMG-20250830-WA0010.jpg" alt="Photo 3 du Pack Silver" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">*
+
+                    </div>
+                    <button class="gallery-nav-btn left" data-target="gallery-silver">‹</button>
+                    <button class="gallery-nav-btn right" data-target="gallery-silver">›</button>
+                </div>
+                <!-- MODIFICATION: Ajout de la galerie Matériel -->
+                <div class="gallery-container mt-8">
+                    <h4 class="text-xl font-semibold text-black mb-2">Matériel</h4>
+                    <div id="gallery-silver-2" class="photo-gallery flex overflow-x-auto snap-x snap-mandatory space-x-4 pb-4">
+                        <img src="https://i.postimg.cc/yWqwyZYJ/Chaisse-Tiffany-01.png" alt="Chaises" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">                                                
+                        <img src="https://i.postimg.cc/90w69pV5/Chaisse-Tiffany-02.png" alt="Chaises" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">                        
+                        <img src="https://i.postimg.cc/fRP3X5tg/Chaise-avec-housse.png" alt="Chaises" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">
+                        <img src="https://i.postimg.cc/ydGqWGMy/Tables-napp-es.png" alt="Table pliante" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">
+                        <img src="https://i.postimg.cc/BnbLXR6K/Sceau-champagne.png" alt="Sceau-champagne" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">
+                        <img src="https://i.postimg.cc/NfmMq8Xz/Changelier-02.png" alt="Chandelier" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">
+                        <img src="https://i.postimg.cc/SQXRVbxq/Changelier-04.png" alt="Chandelier" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">
+                        <img src="https://i.postimg.cc/wBfxcwK7/Changelier-01.png" alt="Chandelier" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">
+                        <img src="https://i.postimg.cc/9fFF7vn6/P-tales-de-fleurs.png" alt="fleurs" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">
+                        <img src="https://i.postimg.cc/zGYrn9Vd/Verre-d-eau.png" alt="Verre-d-eau" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">
+                        <img src="https://i.postimg.cc/LsZJVfj4/Sous-plat-dor.png" alt="Sous-plat-dor" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">
+                        <img src="https://i.postimg.cc/kXfRM7nC/Couverts.png" alt="Couverts argenté" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">
+                        <img src="https://i.postimg.cc/9M05m2nf/Couverts-dor-es.png" alt="Chaises" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">                        
+                        <img src="https://i.postimg.cc/LsNFF5v7/Sous-plates-transparents.png" alt="Chaises" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">                        
+                    </div>
+                    <button class="gallery-nav-btn left" data-target="gallery-silver-2">‹</button>
+                    <button class="gallery-nav-btn right" data-target="gallery-silver-2">›</button>
+                </div>
+                <div class="mt-6">
+                    <h4 class="text-xl font-semibold text-black mb-2">Détails inclus :</h4>
+                    <ul class="list-disc list-inside space-y-1 text-gray-700">
+                        <li>Chaise Tiffany</li>
+                        <li>Tables rondes</li>
+                        <li>Nappes</li>
+                        <li>Tapis rouge</li>
+                        <li>Serviette en papier</li>
+                    </ul>
+                </div>
+                <div class="mt-6">
+                    <h4 class="text-xl font-semibold text-black mb-2">Services offerts :</h4>
+                    <div class="services-offerts-content text-gray-700"></div>
+                </div>
+
+                <!-- DÉBUT: Section d'informations ajoutée -->
+                <div class="mt-6 border-t pt-6 space-y-6">
+                    <div>
+                        <h4 class="text-xl font-bold text-black mb-2">NB :</h4>
+                        <ul class="list-disc list-inside space-y-2 text-gray-700">
+                            <li>La location de la salle inclus 1 à 300 personnes (Invités)</li>
+                            <li>A l'ajout d'une table (10 personnes) c'est + 100$</li>
+                            <li>La réservation se fait moyennant 1000$</li>
+                        </ul>
+                    </div>
+                
+                    <div>
+                        <h4 class="text-xl font-bold text-black mb-2 uppercase">Décoration salle incluse : <a href="#" class="link-to-packages-modal text-red-900 hover:underline">VOIR PACKAGE</a></h4>
+                    </div>
+                    
+                    <div>
+                        <h4 class="text-xl font-bold text-black mb-2 uppercase">NOURRITURE (SERVICES TRAITEUR)</h4>
+                        <p class="text-gray-700 mb-4">
+                        Nos plats / Personnes 12$ - 15$ - 17$
+                        <br>Entrées nourritures EXTÉRIEUR 2$ / Personnes 
+                            <br>Si la nourriture vient de l'extérieur. 
+                        </p>
+                        <div class="text-center mt-4">
+                            <h5 class="text-lg font-semibold text-black mb-2">Contact</h5>
+                            <div class="flex items-center justify-center space-x-6">
+                                <a href="https://wa.me/243990525313" target="_blank" title="Contacter sur WhatsApp" class="text-green-600 hover:text-green-800 transition-transform transform hover:scale-110">
+                                    <i class="fi fi-brands-whatsapp" style="font-size: 2rem;"></i>
+                                </a>
+                                <a href="tel:+243990525313" title="Appeler le service traiteur" class="text-blue-600 hover:text-blue-800 transition-transform transform hover:scale-110">
+                                    <i class="fi fi-sr-phone-call" style="font-size: 2rem;"></i>
+                                </a>
+                                <a href="https://web.facebook.com/profile.php?id=100063589300348&mibextid=wwXIfr&rdid=HFpDvA4POEZqILwB#" target="_blank" title="Voir sur Facebook" class="hover:opacity-80 transition-transform transform hover:scale-110">
+                                    <i class="fi fi-brands-facebook" style="font-size: 2rem; color: #1877F2;"></i>
+                                </a>
+                                <a href="https://www.tiktok.com/@votre-compte-traiteur" target="_blank" title="Voir sur TikTok" class="text-black hover:text-gray-700 transition-transform transform hover:scale-110">
+                                    <i class="fi fi-brands-tik-tok" style="font-size: 2rem;"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                
+                    <div>
+                        <h4 class="text-xl font-bold text-black mb-2 uppercase">GÂTEAU</h4>
+                        <p class="text-gray-700 mb-4">
+                            Contactez notre partenaire pâtissier pour créer le gâteau de mariage de vos rêves.
+                        </p>
+                        <div class="text-center mt-4">
+                            <h5 class="text-lg font-semibold text-black mb-2">Contact</h5>
+                            <div class="flex items-center justify-center space-x-6">
+                                 <a href="https://wa.me/243856271272" target="_blank" title="Contacter sur WhatsApp pour le gâteau" class="text-green-600 hover:text-green-800 transition-transform transform hover:scale-110">
+                                    <i class="fi fi-brands-whatsapp" style="font-size: 2rem;"></i>
+                                </a>
+                                 <a href="tel:+243856271272" title="Appeler pour le gâteau" class="text-blue-600 hover:text-blue-800 transition-transform transform hover:scale-110">
+                                    <i class="fi fi-sr-phone-call" style="font-size: 2rem;"></i>
+                                </a>
+                                <a href="https://www.facebook.com/share/1BM57d9szV/" target="_blank" title="Voir sur Facebook" class="hover:opacity-80 transition-transform transform hover:scale-110">
+                                    <i class="fi fi-brands-facebook" style="font-size: 2rem; color: #1877F2;"></i>
+                                </a>
+                                <a href="https://www.instagram.com/ines_le_gateau_?igsh=MTdzejZ2MXVpeWZ6Yg==" target="_blank" title="Voir sur Instagram" class="hover:opacity-80 transition-transform transform hover:scale-110">
+                                    <i class="fi fi-brands-instagram instagram-icon" style="font-size: 2rem;"></i>
+                                </a>
+                                <a href="https://www.tiktok.com/@ines_le_gateau?_t=ZM-8zCXKJLawKe&_r=1" target="_blank" title="Voir sur TikTok" class="text-black hover:text-gray-700 transition-transform transform hover:scale-110">
+                                    <i class="fi fi-brands-tik-tok" style="font-size: 2rem;"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                
+                    <div>
+                        <h4 class="text-xl font-bold text-black mb-2 uppercase">ESPACES EXTÉRIEURS : <a href="#" class="link-to-exterieurs-modal text-blue-700 hover:underline">Voir "SERVICES EXTÉRIEURS" (Menu Principal)</a></h4>
+                        <p class="text-gray-700">
+                        A l'ajout de 1.000 $
+                        </p>
+                    </div>
+                </div>
+                <!-- FIN: Section d'informations ajoutée -->
+            </div>
+        </div>
+    </div>
+
+    <!-- MODALE: Pack Gold -->
+    <div id="modal-pack-gold" class="modal hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4">
+        <div class="bg-white rounded-lg shadow-2xl max-w-4xl w-full mx-auto flex flex-col max-h-[90vh]">
+            <div class="sticky top-0 bg-white z-10 p-4 sm:p-6 flex items-center justify-between border-b">
+                <button class="close-modal text-red-500 hover:text-red-700 transition-colors" aria-label="Fermer la fenêtre">
+                    <i class="fi fi-sr-home text-2xl sm:text-3xl"></i>
+                </button>
+                <h3 class="text-xl sm:text-3xl font-bold text-black text-right">Pack Gold</h3>
+            </div>
+            <div class="overflow-y-auto p-4 sm:p-6">
+                <div class="gallery-container">
+                    <div id="gallery-gold" class="photo-gallery flex overflow-x-auto snap-x snap-mandatory space-x-4 pb-4">
+                        <img src="https://i.postimg.cc/3N6BVWRg/Salle-5k-01.jpg" alt="Photo 2 du Pack Gold" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">
+                        <img src="https://i.postimg.cc/9XNJrgpr/Salle-5k-06.jpg" alt="Photo 2 du Pack Gold" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">
+                        <img src="https://i.postimg.cc/65kch7FK/Salle-5k-08.jpg" alt="Photo 1 du Pack Gold" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">
+                        <img src="https://i.postimg.cc/4xp52fT9/Salle-5k-04.jpg" alt="Photo 1 du Pack Gold" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">
+                        <img src="https://i.postimg.cc/NFLDdRgs/Salle-5k-07.jpg" alt="Photo 2 du Pack Gold" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">
+                        <img src="https://i.postimg.cc/5t3m1sy9/Salle-5k-02.jpg" alt="Photo 1 du Pack Gold" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">
+                        <img src="https://i.postimg.cc/ZqZL1GTD/Salle-5k-05.jpg" alt="Photo 2 du Pack Gold" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">
+                        <img src="https://i.postimg.cc/tCZDPdSD/Salle-5k-03.jpg" alt="Photo 1 du Pack Gold" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">
+
+                    </div>
+                    <button class="gallery-nav-btn left" data-target="gallery-gold">‹</button>
+                    <button class="gallery-nav-btn right" data-target="gallery-gold">›</button>
+                </div>
+                <!-- MODIFICATION: Ajout de la galerie Matériel -->
+                <div class="gallery-container mt-8">
+                    <h4 class="text-xl font-semibold text-black mb-2">Matériel</h4>
+                    <div id="gallery-gold-2" class="photo-gallery flex overflow-x-auto snap-x snap-mandatory space-x-4 pb-4">
+                        <img src="https://i.postimg.cc/Hnv3kFj4/grossiste-chaise-medaillon-new-wdbnek.jpg" alt="Chaises" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">                        
+                        <img src="https://i.postimg.cc/90w69pV5/Chaisse-Tiffany-02.png" alt="Chaises" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">                        
+                        <img src="https://i.postimg.cc/yWqwyZYJ/Chaisse-Tiffany-01.png" alt="Chaises" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">                                                
+                        <img src="https://i.postimg.cc/fRP3X5tg/Chaise-avec-housse.png" alt="Chaises" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">
+                        <img src="https://i.postimg.cc/ydGqWGMy/Tables-napp-es.png" alt="Table pliante" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">
+                        <img src="https://i.postimg.cc/BnbLXR6K/Sceau-champagne.png" alt="Sceau-champagne" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">
+                        <img src="https://i.postimg.cc/NfmMq8Xz/Changelier-02.png" alt="Chandelier" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">
+                        <img src="https://i.postimg.cc/SQXRVbxq/Changelier-04.png" alt="Chandelier" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">
+                        <img src="https://i.postimg.cc/wBfxcwK7/Changelier-01.png" alt="Chandelier" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">
+                        <img src="https://i.postimg.cc/9fFF7vn6/P-tales-de-fleurs.png" alt="fleurs" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">
+                        <img src="https://i.postimg.cc/zGYrn9Vd/Verre-d-eau.png" alt="Verre-d-eau" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">
+                        <img src="https://i.postimg.cc/LsZJVfj4/Sous-plat-dor.png" alt="Sous-plat-dor" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">
+                        <img src="https://i.postimg.cc/kXfRM7nC/Couverts.png" alt="Couverts argenté" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">
+                        <img src="https://i.postimg.cc/9M05m2nf/Couverts-dor-es.png" alt="Chaises" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">                        
+                        <img src="https://i.postimg.cc/LsNFF5v7/Sous-plates-transparents.png" alt="Chaises" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">                        
+                    </div>
+                    <button class="gallery-nav-btn left" data-target="gallery-gold-2">‹</button>
+                    <button class="gallery-nav-btn right" data-target="gallery-gold-2">›</button>
+                </div>
+                <div class="mt-6">
+                    <h4 class="text-xl font-semibold text-black mb-2">Détails inclus :</h4>
+                    <ul class="list-disc list-inside space-y-1 text-gray-700">
+                        <li>Chaise Médaillons</li>
+                        <li>Tables rondes</li>
+                        <li>Nappes</li>
+                        <li>Tapis rouge</li>
+                        <li>Serviette en papier</li>
+                    </ul>
+                </div>
+                <div class="mt-6">
+                    <h4 class="text-xl font-semibold text-black mb-2">Services offerts :</h4>
+                    <div class="services-offerts-content text-gray-700"></div>
+                </div>
+
+                <!-- DÉBUT: Section d'informations ajoutée -->
+                <div class="mt-6 border-t pt-6 space-y-6">
+                    <div>
+                        <h4 class="text-xl font-bold text-black mb-2">NB :</h4>
+                        <ul class="list-disc list-inside space-y-2 text-gray-700">
+                            <li>La location de la salle inclus 1 à 300 personnes (Invités)</li>
+                            <li>A l'ajout d'une table (10 personnes) c'est + 100$</li>
+                            <li>La réservation se fait moyennant 1000$</li>
+                        </ul>
+                    </div>
+                
+                    <div>
+                        <h4 class="text-xl font-bold text-black mb-2 uppercase">Décoration salle incluse : <a href="#" class="link-to-packages-modal text-red-900 hover:underline">VOIR PACKAGE</a></h4>
+                    </div>
+                    
+                    <div>
+                        <h4 class="text-xl font-bold text-black mb-2 uppercase">NOURRITURE (SERVICES TRAITEUR)</h4>
+                        <p class="text-gray-700 mb-4">
+                        Nos plats / Personnes 12$ - 15$ - 17$
+                        <br>Entrées nourritures EXTÉRIEUR 2$ / Personnes 
+                            <br>Si la nourriture vient de l'extérieur. 
+                        </p>
+                        <div class="text-center mt-4">
+                            <h5 class="text-lg font-semibold text-black mb-2">Contact</h5>
+                            <div class="flex items-center justify-center space-x-6">
+                                <a href="https://wa.me/243990525313" target="_blank" title="Contacter sur WhatsApp" class="text-green-600 hover:text-green-800 transition-transform transform hover:scale-110">
+                                    <i class="fi fi-brands-whatsapp" style="font-size: 2rem;"></i>
+                                </a>
+                                <a href="tel:+243990525313" title="Appeler le service traiteur" class="text-blue-600 hover:text-blue-800 transition-transform transform hover:scale-110">
+                                    <i class="fi fi-sr-phone-call" style="font-size: 2rem;"></i>
+                                </a>
+                                <a href="https://web.facebook.com/profile.php?id=100063589300348&mibextid=wwXIfr&rdid=HFpDvA4POEZqILwB#" target="_blank" title="Voir sur Facebook" class="hover:opacity-80 transition-transform transform hover:scale-110">
+                                    <i class="fi fi-brands-facebook" style="font-size: 2rem; color: #1877F2;"></i>
+                                </a>
+                                <a href="https://www.tiktok.com/@votre-compte-traiteur" target="_blank" title="Voir sur TikTok" class="text-black hover:text-gray-700 transition-transform transform hover:scale-110">
+                                    <i class="fi fi-brands-tik-tok" style="font-size: 2rem;"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                
+                    <div>
+                        <h4 class="text-xl font-bold text-black mb-2 uppercase">GÂTEAU</h4>
+                        <p class="text-gray-700 mb-4">
+                            Contactez notre partenaire pâtissier pour créer le gâteau de mariage de vos rêves.
+                        </p>
+                        <div class="text-center mt-4">
+                            <h5 class="text-lg font-semibold text-black mb-2">Contact</h5>
+                            <div class="flex items-center justify-center space-x-6">
+                                 <a href="https://wa.me/243856271272" target="_blank" title="Contacter sur WhatsApp pour le gâteau" class="text-green-600 hover:text-green-800 transition-transform transform hover:scale-110">
+                                    <i class="fi fi-brands-whatsapp" style="font-size: 2rem;"></i>
+                                </a>
+                                 <a href="tel:+243856271272" title="Appeler pour le gâteau" class="text-blue-600 hover:text-blue-800 transition-transform transform hover:scale-110">
+                                    <i class="fi fi-sr-phone-call" style="font-size: 2rem;"></i>
+                                </a>
+                                <a href="https://www.facebook.com/share/1BM57d9szV/" target="_blank" title="Voir sur Facebook" class="hover:opacity-80 transition-transform transform hover:scale-110">
+                                    <i class="fi fi-brands-facebook" style="font-size: 2rem; color: #1877F2;"></i>
+                                </a>
+                                <a href="https://www.instagram.com/ines_le_gateau_?igsh=MTdzejZ2MXVpeWZ6Yg==" target="_blank" title="Voir sur Instagram" class="hover:opacity-80 transition-transform transform hover:scale-110">
+                                    <i class="fi fi-brands-instagram instagram-icon" style="font-size: 2rem;"></i>
+                                </a>
+                                <a href="https://www.tiktok.com/@ines_le_gateau?_t=ZM-8zCXKJLawKe&_r=1" target="_blank" title="Voir sur TikTok" class="text-black hover:text-gray-700 transition-transform transform hover:scale-110">
+                                    <i class="fi fi-brands-tik-tok" style="font-size: 2rem;"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                
+                    <div>
+                        <h4 class="text-xl font-bold text-black mb-2 uppercase">ESPACES EXTÉRIEURS : <a href="#" class="link-to-exterieurs-modal text-blue-700 hover:underline">Voir "SERVICES EXTÉRIEURS" (Menu Principal)</a></h4>
+                        <p class="text-gray-700">
+                        A l'ajout de 1.000 $
+                        </p>
+                    </div>
+                </div>
+                <!-- FIN: Section d'informations ajoutée -->
+            </div>
+        </div>
+    </div>
+
+    <!-- MODALE: Pack Platinum -->
+    <div id="modal-pack-platinum" class="modal hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4">
+        <div class="bg-white rounded-lg shadow-2xl max-w-4xl w-full mx-auto flex flex-col max-h-[90vh]">
+            <div class="sticky top-0 bg-white z-10 p-4 sm:p-6 flex items-center justify-between border-b">
+                <button class="close-modal text-red-500 hover:text-red-700 transition-colors" aria-label="Fermer la fenêtre">
+                    <i class="fi fi-sr-home text-2xl sm:text-3xl"></i>
+                </button>
+                <h3 class="text-xl sm:text-3xl font-bold text-black text-right">Pack Platinum</h3>
+            </div>
+            <div class="overflow-y-auto p-4 sm:p-6">
+                <div class="gallery-container">
+                    <div id="gallery-platinum" class="photo-gallery flex overflow-x-auto snap-x snap-mandatory space-x-4 pb-4">
+                        <img src="https://i.postimg.cc/yYS0RDGz/IMG-20250819-WA0057.jpg" alt="Photo 1 du Pack Platinum" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">
+                        <img src="https://i.postimg.cc/dQf8D24B/IMG-20250819-WA0058.jpg" alt="Photo 2 du Pack Platinum" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">
+                        <img src="https://i.postimg.cc/8c7MtcPM/IMG-20250819-WA0059.jpg" alt="Photo 1 du Pack Platinum" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">
+                        <img src="https://i.postimg.cc/xCTKNgws/IMG-20250819-WA0060.jpg" alt="Photo 2 du Pack Platinum" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">
+                        <img src="https://i.postimg.cc/YS7NMtbB/IMG-20250819-WA0061.jpg" alt="Photo 1 du Pack Platinum" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">
+                        <img src="https://i.postimg.cc/j2BN9TL9/IMG-20250819-WA0064.jpg" alt="Photo 2 du Pack Platinum" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">
+                        <img src="https://i.postimg.cc/zX9S2ChB/IMG-20250819-WA0066.jpg" alt="Photo 1 du Pack Platinum" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">
+                        <img src="https://i.postimg.cc/xTk3Pxch/IMG-20250819-WA0068.jpg" alt="Photo 2 du Pack Platinum" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">
+                        <img src="https://i.postimg.cc/Fzzg8GGf/IMG-20250819-WA0069.jpg" alt="Photo 1 du Pack Platinum" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">
+                        <img src="https://i.postimg.cc/qqFXTnZ1/IMG-20250819-WA0070.jpg" alt="Photo 2 du Pack Platinum" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">
+                        <img src="https://i.postimg.cc/sfHJ7dD5/IMG-20250819-WA0072.jpg" alt="Photo 1 du Pack Platinum" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">
+                        <img src="https://i.postimg.cc/Njm83K8x/Whats-App-Image-2025-08-19-21-38-32-77ff9fb8.jpg" alt="Photo 2 du Pack Platinum" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">
+                        <img src="https://i.postimg.cc/7LN3LjWG/Whats-App-Image-2025-08-19-21-38-33-245d8bd7.jpg" alt="Photo 1 du Pack Platinum" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">
+
+                    </div>
+                    <button class="gallery-nav-btn left" data-target="gallery-platinum">‹</button>
+                    <button class="gallery-nav-btn right" data-target="gallery-platinum">›</button>
+                </div>
+                <!-- MODIFICATION: Ajout de la galerie Matériel -->
+                <div class="gallery-container mt-8">
+                    <h4 class="text-xl font-semibold text-black mb-2">Matériel</h4>
+                    <div id="gallery-platinum-2" class="photo-gallery flex overflow-x-auto snap-x snap-mandatory space-x-4 pb-4">
+                        <img src="https://i.postimg.cc/Hnv3kFj4/grossiste-chaise-medaillon-new-wdbnek.jpg" alt="Chaises" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">                        
+                        <img src="https://i.postimg.cc/90w69pV5/Chaisse-Tiffany-02.png" alt="Chaises" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">                        
+                        <img src="https://i.postimg.cc/yWqwyZYJ/Chaisse-Tiffany-01.png" alt="Chaises" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">                                                
+                        <img src="https://i.postimg.cc/90w69pV5/Chaisse-Tiffany-02.png" alt="Chaises" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">                        
+                        <img src="https://i.postimg.cc/fRP3X5tg/Chaise-avec-housse.png" alt="Chaises" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">
+                        <img src="https://i.postimg.cc/ydGqWGMy/Tables-napp-es.png" alt="Table pliante" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">
+                        <img src="https://i.postimg.cc/BnbLXR6K/Sceau-champagne.png" alt="Sceau-champagne" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">
+                        <img src="https://i.postimg.cc/NfmMq8Xz/Changelier-02.png" alt="Chandelier" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">
+                        <img src="https://i.postimg.cc/SQXRVbxq/Changelier-04.png" alt="Chandelier" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">
+                        <img src="https://i.postimg.cc/wBfxcwK7/Changelier-01.png" alt="Chandelier" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">
+                        <img src="https://i.postimg.cc/9fFF7vn6/P-tales-de-fleurs.png" alt="fleurs" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">
+                        <img src="https://i.postimg.cc/zGYrn9Vd/Verre-d-eau.png" alt="Verre-d-eau" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">
+                        <img src="https://i.postimg.cc/LsZJVfj4/Sous-plat-dor.png" alt="Sous-plat-dor" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">
+                        <img src="https://i.postimg.cc/kXfRM7nC/Couverts.png" alt="Couverts argenté" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">
+                        <img src="https://i.postimg.cc/9M05m2nf/Couverts-dor-es.png" alt="Chaises" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">                        
+                        <img src="https://i.postimg.cc/LsNFF5v7/Sous-plates-transparents.png" alt="Chaises" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">                        
+                    </div>
+                    <button class="gallery-nav-btn left" data-target="gallery-platinum-2">‹</button>
+                    <button class="gallery-nav-btn right" data-target="gallery-platinum-2">›</button>
+                </div>
+                <div class="mt-6">
+                    <h4 class="text-xl font-semibold text-black mb-2">Détails inclus :</h4>
+                    <ul class="list-disc list-inside space-y-1 text-gray-700">
+                        <li>Chaise Médaillons</li>
+                        <li>Tables vitrées</li>
+                        <li>Nappes</li>
+                        <li>Tapis rouge</li>
+                        <li>Serviette en papier</li>
+                    </ul>
+                </div>
+                <div class="mt-6">
+                    <h4 class="text-xl font-semibold text-black mb-2">Services offerts :</h4>
+                    <div class="services-offerts-content text-gray-700"></div>
+                </div>
+
+                <!-- DÉBUT: Section d'informations ajoutée -->
+                <div class="mt-6 border-t pt-6 space-y-6">
+                    <div>
+                        <h4 class="text-xl font-bold text-black mb-2">NB :</h4>
+                        <ul class="list-disc list-inside space-y-2 text-gray-700">
+                            <li>La location de la salle inclus 1 à 300 personnes (Invités)</li>
+                            <li>A l'ajout d'une table (10 personnes) c'est + 100$</li>
+                            <li>La réservation se fait moyennant 1000$</li>
+                        </ul>
+                    </div>
+                
+                    <div>
+                        <h4 class="text-xl font-bold text-black mb-2 uppercase">Décoration salle incluse : <a href="#" class="link-to-packages-modal text-red-900 hover:underline">VOIR PACKAGE</a></h4>
+                    </div>
+                    
+                    <div>
+                        <h4 class="text-xl font-bold text-black mb-2 uppercase">NOURRITURE (SERVICES TRAITEUR)</h4>
+                        <p class="text-gray-700 mb-4">
+                        Nos plats / Personnes 12$ - 15$ - 17$
+                        <br>Entrées nourritures EXTÉRIEUR 2$ / Personnes 
+                            <br>Si la nourriture vient de l'extérieur. 
+                        </p>
+                        <div class="text-center mt-4">
+                            <h5 class="text-lg font-semibold text-black mb-2">Contact</h5>
+                            <div class="flex items-center justify-center space-x-6">
+                                <a href="https://wa.me/243990525313" target="_blank" title="Contacter sur WhatsApp" class="text-green-600 hover:text-green-800 transition-transform transform hover:scale-110">
+                                    <i class="fi fi-brands-whatsapp" style="font-size: 2rem;"></i>
+                                </a>
+                                <a href="tel:+243990525313" title="Appeler le service traiteur" class="text-blue-600 hover:text-blue-800 transition-transform transform hover:scale-110">
+                                    <i class="fi fi-sr-phone-call" style="font-size: 2rem;"></i>
+                                </a>
+                                <a href="https://web.facebook.com/profile.php?id=100063589300348&mibextid=wwXIfr&rdid=HFpDvA4POEZqILwB#" target="_blank" title="Voir sur Facebook" class="hover:opacity-80 transition-transform transform hover:scale-110">
+                                    <i class="fi fi-brands-facebook" style="font-size: 2rem; color: #1877F2;"></i>
+                                </a>
+                                <a href="https://www.tiktok.com/@votre-compte-traiteur" target="_blank" title="Voir sur TikTok" class="text-black hover:text-gray-700 transition-transform transform hover:scale-110">
+                                    <i class="fi fi-brands-tik-tok" style="font-size: 2rem;"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                
+                    <div>
+                        <h4 class="text-xl font-bold text-black mb-2 uppercase">GÂTEAU</h4>
+                        <p class="text-gray-700 mb-4">
+                            Contactez notre partenaire pâtissier pour créer le gâteau de mariage de vos rêves.
+                        </p>
+                        <div class="text-center mt-4">
+                            <h5 class="text-lg font-semibold text-black mb-2">Contact</h5>
+                            <div class="flex items-center justify-center space-x-6">
+                                 <a href="https://wa.me/243856271272" target="_blank" title="Contacter sur WhatsApp pour le gâteau" class="text-green-600 hover:text-green-800 transition-transform transform hover:scale-110">
+                                    <i class="fi fi-brands-whatsapp" style="font-size: 2rem;"></i>
+                                </a>
+                                 <a href="tel:+243856271272" title="Appeler pour le gâteau" class="text-blue-600 hover:text-blue-800 transition-transform transform hover:scale-110">
+                                    <i class="fi fi-sr-phone-call" style="font-size: 2rem;"></i>
+                                </a>
+                                <a href="https://www.facebook.com/share/1BM57d9szV/" target="_blank" title="Voir sur Facebook" class="hover:opacity-80 transition-transform transform hover:scale-110">
+                                    <i class="fi fi-brands-facebook" style="font-size: 2rem; color: #1877F2;"></i>
+                                </a>
+                                <a href="https://www.instagram.com/ines_le_gateau_?igsh=MTdzejZ2MXVpeWZ6Yg==" target="_blank" title="Voir sur Instagram" class="hover:opacity-80 transition-transform transform hover:scale-110">
+                                    <i class="fi fi-brands-instagram instagram-icon" style="font-size: 2rem;"></i>
+                                </a>
+                                <a href="https://www.tiktok.com/@ines_le_gateau?_t=ZM-8zCXKJLawKe&_r=1" target="_blank" title="Voir sur TikTok" class="text-black hover:text-gray-700 transition-transform transform hover:scale-110">
+                                    <i class="fi fi-brands-tik-tok" style="font-size: 2rem;"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                
+                    <div>
+                        <h4 class="text-xl font-bold text-black mb-2 uppercase">ESPACES EXTÉRIEURS : <a href="#" class="link-to-exterieurs-modal text-blue-700 hover:underline">Voir "SERVICES EXTÉRIEURS" (Menu Principal)</a></h4>
+                        <p class="text-gray-700">
+                        A l'ajout de 1.000 $
+                        </p>
+                    </div>
+                </div>
+                <!-- FIN: Section d'informations ajoutée -->
+            </div>
+        </div>
+    </div>
+
+    <!-- MODALE: Services Extérieurs -->
+    <div id="modal-services-exterieurs" class="modal hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4">
+        <div class="bg-white rounded-lg shadow-2xl max-w-4xl w-full mx-auto flex flex-col max-h-[90vh]">
+            <div class="sticky top-0 bg-white z-10 p-4 sm:p-6 flex items-center justify-between border-b">
+                <button class="close-modal text-red-500 hover:text-red-700 transition-colors" aria-label="Fermer la fenêtre">
+                    <i class="fi fi-sr-home text-2xl sm:text-3xl"></i>
+                </button>
+                <h3 class="text-xl sm:text-3xl font-bold text-black text-right">Nos Espaces Extérieurs</h3>
+            </div>
+            <div class="overflow-y-auto p-4 sm:p-6">
+                <div class="gallery-container">
+                    <div id="gallery-services-exterieurs" class="photo-gallery flex overflow-x-auto snap-x snap-mandatory space-x-4 pb-4">
+                        <img src="https://i.postimg.cc/W1QdCMs9/Ext-15.jpg" alt="Photo Civil 1" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">
+                        <img src="https://i.postimg.cc/3N3G82BF/Ext-rieur-01.jpg" alt="Photo Civil 1" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">
+                        <img src="https://i.postimg.cc/ydXBSSkv/IMG-20250826-WA0014.jpg" alt="Photo Civil 1" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">
+                        <img src="https://i.postimg.cc/HWt5SPYZ/Ext-rieur-02.jpg" alt="Photo Civil 1" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">
+                        <img src="https://i.postimg.cc/9Xty9Ncc/Ext-2.jpg" alt="Photo Civil 2" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">
+                        <img src="https://i.postimg.cc/GhhD6J9c/Ext-rieur-03.jpg" alt="Photo Civil 1" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">
+                        <iframe 
+                            class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center"
+                            src="https://app.videas.fr/6b258b90-eca6-457e-a10d-8393ce1600e7/" 
+                            title="Lecteur Vidéo" 
+                            frameborder="0" 
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                            allowfullscreen>
+                        </iframe>                        
+                        <img src="https://i.postimg.cc/fWK0ytvL/Ext-11.jpg" alt="Photo Civil 1" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">
+                        <img src="https://i.postimg.cc/4NLcG7hp/Ext-rieur-04.jpg" alt="Photo Civil 1" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">
+
+                        <img src="https://i.postimg.cc/pVCRWzNd/IMG-20250827-WA0032.jpg" alt="Photo Civil 1" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">
+                        <img src="https://i.postimg.cc/JnNJCpbh/Ext-rieur-05.jpg" alt="Photo Civil 1" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">
+
+                        <img src="https://i.postimg.cc/kgDSkJK5/Ext-1.jpg" alt="Photo Civil 2" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">
+                        <img src="https://i.postimg.cc/nrTDCMSb/Ext-rieur-06.jpg" alt="Photo Civil 1" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">
+
+                        <img src="https://i.postimg.cc/DZqfdMYQ/IMG-20250828-WA0051.jpg" alt="Photo Civil 1" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">
+                        <img src="https://i.postimg.cc/8PZWKJF3/Ext-3.jpg" alt="Photo Civil 1" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">
+                        <img src="https://i.postimg.cc/0NhrCm5v/IMG-20250828-WA0004.jpg" alt="Photo Civil 1" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">
+                        <img src="https://i.postimg.cc/CLxnqhv4/Ext-12.jpg" alt="Photo Civil 2" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">
+                        <img src="https://i.postimg.cc/PrFHZH5s/IMG-20250828-WA0053.jpg" alt="Photo Civil 1" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">
+                        <img src="https://i.postimg.cc/sXCZQ58B/Ext-5.jpg" alt="Photo Civil 1" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">
+                        <img src="https://i.postimg.cc/y8MzQTRL/IMG-20250827-WA0036.jpg" alt="Photo Civil 1" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">
+                        <img src="https://i.postimg.cc/SKMMxgZF/Ext-6.jpg" alt="Photo Civil 2" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">
+                        <img src="https://i.postimg.cc/0N71LJdP/IMG-20250827-WA0046.jpg" alt="Photo Civil 1" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">
+                        <img src="https://i.postimg.cc/XJKBwpSs/Ext-8.jpg" alt="Photo Civil 1" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">
+                        <img src="https://i.postimg.cc/j2MbM06f/IMG-20250828-WA0054.jpg" alt="Photo Civil 1" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">
+                        <img src="https://i.postimg.cc/zv0Lc6fW/Ext-10.jpg" alt="Photo Civil 2" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">
+                        <img src="https://i.postimg.cc/PqDdT7hG/IMG-20250828-WA0052.jpg" alt="Photo Civil 1" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">
+                        <img src="https://i.postimg.cc/sxVQKs3s/Ext-9.jpg" alt="Photo Civil 1" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">
+                        <img src="https://i.postimg.cc/GtLRPhDr/IMG-20250826-WA0016.jpg" alt="Photo Civil 1" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">
+                        <img src="https://i.postimg.cc/Qx81JkM1/Ext-4.jpg" alt="Photo Civil 2" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">
+                        <img src="https://i.postimg.cc/QxMsHCsJ/IMG-20250827-WA0033.jpg" alt="Photo Civil 1" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">
+                        <img src="https://i.postimg.cc/RZ33gPx6/Ext-14.jpg" alt="Photo Civil 1" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">
+                        <img src="https://i.postimg.cc/9MVHVFJT/IMG-20250827-WA0038.jpg" alt="Photo Civil 1" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">
+                        <img src="https://i.postimg.cc/Hkcg9NrJ/IMG-20250827-WA0035.jpg" alt="Photo Civil 2" class="flex-none w-full md:w-[600px] md:h-[400px] h-auto rounded-lg object-cover snap-center">
+                    </div>
+                    <button class="gallery-nav-btn left" data-target="gallery-services-exterieurs">‹</button>
+                    <button class="gallery-nav-btn right" data-target="gallery-services-exterieurs">›</button>
+                </div>
+                <div class="mt-6">
+                    <h4 class="text-xl font-semibold text-black mb-2">Services proposés :</h4>
+                    <ul class="list-disc list-inside space-y-1 text-gray-700">
+                        <li>Organisation de cérémonies civiles en extérieur</li>
+                        <li>Espaces aménagés pour cocktails et réceptions</li>
+                        <li>Décoration extérieure sur mesure</li>
+                        <li>DJ</li>
+                        <li>Groupe élécrogène</li>
+                        <li>Serveur (Uniquement pour la boisson)</li>
+                        <li>Assiètes</li>
+                        <li>Verres</li>
+                        <li>Table hautes</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="modal-admin-login" class="modal hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4">
+    <div class="bg-white rounded-lg shadow-2xl max-w-sm w-full p-8 space-y-4">
+        <h3 class="text-2xl font-bold text-center">Connexion Admin</h3>
+        <div id="login-error" class="text-red-500 text-sm text-center hidden"></div>
+        <input type="text" id="username" placeholder="Identifiant" class="w-full px-4 py-2 border rounded-lg">
+        <input type="password" id="password" placeholder="Mot de passe" class="w-full px-4 py-2 border rounded-lg">
+        <button id="btn-login" class="w-full bg-rose-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-rose-700">Se Connecter</button>
+        <button id="btn-cancel-login" class="w-full text-center text-gray-500 mt-2">Annuler</button>
+    </div>
+</div>
+
+<button id="open-login-modal" class="fixed bottom-4 right-4 bg-gray-800 text-white p-2 rounded-full shadow-lg hover:bg-gray-700 z-50">
+    <i class="fi fi-ss-user-lock"></i>
+</button>
+    <script>
+        document.addEventListener('DOMContentLoaded', async function() {
+            // --- GESTION DES MODALES ET DU BOUTON RETOUR ---
+
+            function hideAllModals() {
+                document.querySelectorAll('.modal').forEach(modal => {
+                    // --- DÉBUT DE L'AJOUT ---
+                    // On cherche une balise <iframe> (pour Videas, YouTube, etc.)
+                    const iframe = modal.querySelector('iframe');
+                    if (iframe) {
+                        // Astuce pour arrêter la vidéo : on sauvegarde et réinitialise la source
+                        const originalSrc = iframe.src;
+                        iframe.src = '';
+                        iframe.src = originalSrc;
+                    }
+
+                    // On cherche une balise <video> (pour les liens directs .mp4)
+                    const video = modal.querySelector('video');
+                    if (video) {
+                        video.pause(); // On met la vidéo en pause
+                    }
+                    // --- FIN DE L'AJOUT ---
+
+                    modal.classList.add('hidden');
+                });
+                document.body.style.overflow = ''; // Rétablit le défilement
+            }
+
+            window.addEventListener('popstate', function(event) {
+                hideAllModals();
+            });
+
+            function openModal(modalId) {
+                const modal = document.getElementById(modalId);
+                if (modal) {
+                    modal.classList.remove('hidden');
+                    document.body.style.overflow = 'hidden';
+                    if (history.state?.modalOpen !== true) {
+                        history.pushState({ modalOpen: true }, null);
+                    }
+                }
+            }
+
+            function closeAllModals() {
+                if (history.state && history.state.modalOpen) {
+                    history.back();
+                } else {
+                    hideAllModals();
+                }
+            }
+
+            // Cloner la liste des services offerts dans chaque modale de package
+            const servicesOffertsList = document.getElementById('services-offerts-list');
+            if (servicesOffertsList) {
+                const servicesOffertsHTML = servicesOffertsList.cloneNode(true);
+                document.querySelectorAll('.services-offerts-content').forEach(container => {
+                    container.innerHTML = ''; // Vider le conteneur avant d'ajouter
+                    container.appendChild(servicesOffertsHTML.cloneNode(true));
+                });
+            }
+
+            // Gestionnaire d'événements pour les boutons de fermeture
+            document.querySelectorAll('.close-modal').forEach(button => {
+                button.addEventListener('click', closeAllModals);
+            });
+
+            // Fermer la modale en cliquant en dehors du contenu
+            document.querySelectorAll('.modal').forEach(modal => {
+                modal.addEventListener('click', (e) => {
+                    if (e.target === modal) {
+                        closeAllModals();
+                    }
+                });
+            });
+
+            // Gestion des clics sur les cartes de services
+            document.getElementById('btn-agenda').addEventListener('click', () => openModal('modal-agenda'));
+            document.getElementById('btn-services').addEventListener('click', () => openModal('modal-services'));
+            document.getElementById('btn-equipe').addEventListener('click', () => openModal('modal-equipe'));
+            document.getElementById('btn-services-exterieurs').addEventListener('click', () => openModal('modal-services-exterieurs'));
+            document.getElementById('btn-contact').addEventListener('click', () => openModal('modal-contact'));
+
+            // Liens depuis la modale "Informations" vers les modales "Package"
+            const packageLinks = [
+                'link-pack-standard', 'link-pack-bronze', 'link-pack-silver', 
+                'link-pack-gold', 'link-pack-platinum'
+            ];
+            packageLinks.forEach(linkId => {
+                const linkElement = document.getElementById(linkId);
+                if (linkElement) {
+                    linkElement.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        const modalId = 'modal-' + linkId.substring(5);
+                        openModal(modalId);
+                    });
+                }
+            });
+
+            // Boutons depuis la modale "Packages" vers les modales détaillées
+            const packageButtons = [
+                'btn-pack-standard', 'btn-pack-bronze', 'btn-pack-silver', 
+                'btn-pack-gold', 'btn-pack-platinum'
+            ];
+            packageButtons.forEach(btnId => {
+                const btnElement = document.getElementById(btnId);
+                if (btnElement) {
+                    btnElement.addEventListener('click', () => {
+                        const modalId = 'modal-' + btnId.substring(4);
+                        openModal(modalId);
+                    });
+                }
+            });
+
+            // AJUSTEMENT : Remplacement des écouteurs par ID par des écouteurs par classe pour plus de flexibilité
+            document.querySelectorAll('.link-to-packages-modal').forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    openModal('modal-equipe');
+                });
+            });
+            
+            document.querySelectorAll('.link-to-exterieurs-modal').forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    openModal('modal-services-exterieurs');
+                });
+            });
+
+            // --- GALERIE INFINIE ---
+            document.querySelectorAll('.gallery-nav-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const targetId = this.getAttribute('data-target');
+                    const gallery = document.getElementById(targetId);
+                    if (gallery && gallery.querySelector('img')) {
+                        const scrollAmount = gallery.querySelector('img').clientWidth + 16;
+                        const isAtEnd = Math.abs(gallery.scrollWidth - gallery.scrollLeft - gallery.clientWidth) < 1;
+                        const isAtStart = gallery.scrollLeft === 0;
+
+                        if (this.classList.contains('left')) {
+                            if (isAtStart) {
+                                gallery.scrollTo({ left: gallery.scrollWidth, behavior: 'smooth' });
+                            } else {
+                                gallery.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
+                            }
+                        } else {
+                            if (isAtEnd) {
+                                gallery.scrollTo({ left: 0, behavior: 'smooth' });
+                            } else {
+                                gallery.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+                            }
+                        }
+                    }
+                });
+            });
+
+// Remplacez l'ancienne section du calendrier par ceci :
+// --- FONCTIONNALITÉ DU CALENDRIER AVEC NOTRE BASE DE DONNÉES ---
+const monthYearEl = document.getElementById('month-year');
+const calendarBodyEl = document.getElementById('calendar-body');
+const prevMonthBtn = document.getElementById('prev-month');
+const nextMonthBtn = document.getElementById('next-month');
+const calendarLoadingEl = document.getElementById('calendar-loading');
+const calendarContainerEl = document.getElementById('calendar-container');
+
+let currentDate = new Date();
+let reservedDates = [];
+let isAdminLoggedIn = false; // Variable pour savoir si l'admin est connecté
+
+async function fetchReservedDates() {
+    try {
+        // On appelle notre propre serveur Python !
+        const response = await fetch('/api/get_dates');
+        if (!response.ok) {
+             throw new Error(`Erreur du serveur: ${response.statusText}`);
+        }
+        reservedDates = await response.json();
+        console.log("Dates réservées chargées depuis notre BDD:", reservedDates);
+
+        calendarLoadingEl.classList.add('hidden');
+        calendarContainerEl.classList.remove('hidden');
+        generateCalendar(currentDate.getFullYear(), currentDate.getMonth());
+
+    } catch (error) {
+        console.error("Impossible de charger les dates:", error);
+        calendarLoadingEl.textContent = "Erreur de connexion au serveur.";
+    }
+}
+
+function generateCalendar(year, month) {
+    calendarBodyEl.innerHTML = '';
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); 
+
+    const firstDayOfMonth = new Date(year, month, 1);
+    const lastDayOfMonth = new Date(year, month + 1, 0);
+    const daysInMonth = lastDayOfMonth.getDate();
+
+    monthYearEl.textContent = firstDayOfMonth.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+
+    let dayOfWeek = firstDayOfMonth.getDay();
+    dayOfWeek = (dayOfWeek === 0) ? 6 : dayOfWeek - 1;
+
+    for (let i = 0; i < dayOfWeek; i++) {
+        calendarBodyEl.innerHTML += `<div class="bg-gray-50"></div>`;
+    }
+
+    for (let day = 1; day <= daysInMonth; day++) {
+        const dayEl = document.createElement('div');
+        const date = new Date(year, month, day);
+        const dateString = date.toISOString().split('T')[0]; // Format YYYY-MM-DD
+
+        dayEl.textContent = day;
+        dayEl.dataset.date = dateString;
+        dayEl.classList.add('calendar-day', 'p-2', 'border', 'rounded-md', 'transition-all', 'duration-200', 'flex', 'items-center', 'justify-center', 'h-12');
+
+        const isReserved = reservedDates.includes(dateString);
+
+        if (date < today) {
+            dayEl.classList.add('past');
+        } else if (isAdminLoggedIn) {
+            // Si admin connecté, on rend les dates cliquables
+            dayEl.classList.add('cursor-pointer', 'hover:bg-blue-100');
+            dayEl.addEventListener('click', () => handleDateClick(dayEl, dateString, isReserved));
+        }
+
+        if (isReserved) {
+            dayEl.classList.add('reserved');
+        }
+
+        calendarBodyEl.appendChild(dayEl);
+    }
+}
+
+async function handleDateClick(element, dateString, isReserved) {
+    const action = isReserved ? 'cancel' : 'reserve';
+    const confirmationMessage = isReserved 
+        ? `Voulez-vous annuler la réservation pour le ${dateString} ?`
+        : `Voulez-vous réserver le ${dateString} ?`;
+
+    if (confirm(confirmationMessage)) {
+        try {
+            const response = await fetch('/api/update_date', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ date: dateString, action: action })
+            });
+            const result = await response.json();
+
+            if (result.success) {
+                // Mettre à jour l'interface sans recharger toute la page
+                fetchReservedDates(); 
+            } else {
+                alert("Erreur: " + result.message);
+            }
+        } catch (error) {
+            alert("Une erreur de communication est survenue.");
+        }
+    }
+}
+
+prevMonthBtn.addEventListener('click', () => {
+    currentDate.setMonth(currentDate.getMonth() - 1);
+    generateCalendar(currentDate.getFullYear(), currentDate.getMonth());
+});
+
+nextMonthBtn.addEventListener('click', () => {
+    currentDate.setMonth(currentDate.getMonth() + 1);
+    generateCalendar(currentDate.getFullYear(), currentDate.getMonth());
+});
+
+// --- GESTION DE LA CONNEXION ADMIN ---
+const loginModal = document.getElementById('modal-admin-login');
+document.getElementById('open-login-modal').addEventListener('click', () => {
+    loginModal.classList.remove('hidden');
+});
+document.getElementById('btn-cancel-login').addEventListener('click', () => {
+    loginModal.classList.add('hidden');
+});
+
+document.getElementById('btn-login').addEventListener('click', async () => {
+    const username = document.getElementById('username').value;
+    const password = document.getElementById('password').value;
+    const errorDiv = document.getElementById('login-error');
+
+    const response = await fetch('/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: username, password: password })
+    });
+
+    const result = await response.json();
+
+    if (result.success) {
+        isAdminLoggedIn = true;
+        loginModal.classList.add('hidden');
+        alert('Connexion réussie. Vous pouvez maintenant modifier les dates.');
+        // On régénère le calendrier pour le rendre cliquable
+        generateCalendar(currentDate.getFullYear(), currentDate.getMonth());
+    } else {
+        errorDiv.textContent = result.message;
+        errorDiv.classList.remove('hidden');
+    }
+});
+
+
+fetchReservedDates(); // Lancement initial
+
+            // --- FIN FONCTIONNALITÉ CALENDRIER ---
+
+
+            // Fonctionnalité de chat IA
+            const chatSendBtn = document.getElementById('chat-send');
+            const chatInput = document.getElementById('chat-input');
+            const chatLog = document.getElementById('chat-log');
+
+            if (chatSendBtn && chatInput) {
+                chatSendBtn.addEventListener('click', sendMessage);
+                chatInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        sendMessage();
+                    }
+                });
+            }
+
+            function sendMessage() {
+                const message = chatInput.value.trim();
+                
+                if (message) {
+                    addMessageToChat(message, 'user');
+                    chatInput.value = '';
+                    
+                    const loadingIndicator = document.createElement('div');
+                    loadingIndicator.className = 'loader';
+                    chatLog.appendChild(loadingIndicator);
+                    chatLog.scrollTop = chatLog.scrollHeight;
+                    
+                    setTimeout(() => {
+                        loadingIndicator.remove();
+                        let response;
+                        
+                        if (message.toLowerCase().includes('prix') || message.toLowerCase().includes('tarif') || message.toLowerCase().includes('coût')) {
+                            response = "Nos tarifs commencent à partir de 3 000 $ pour le Pack Standard et peuvent aller jusqu'à 6 000 $ pour le Pack Platinum. Souhaitez-vous plus de détails sur un pack spécifique ?";
+                        } else if (message.toLowerCase().includes('disponibilité') || message.toLowerCase().includes('date') || message.toLowerCase().includes('réserver')) {
+                            response = "Vous pouvez consulter nos disponibilités via l'agenda. Pour effectuer une réservation, veuillez nous contacter directement par téléphone au 0997024531 ou via WhatsApp.";
+                        } else if (message.toLowerCase().includes('adresse') || message.toLowerCase().includes('localisation') || message.toLowerCase().includes('où')) {
+                            response = "Nous sommes situés au 534 Rte Kipopo, Lubumbashi. Voici le lien pour nous localiser sur Google Maps : https://maps.app.goo.gl/SeHjt48xyDjPqUmQ6";
+                        } else if (message.toLowerCase().includes('pack') || message.toLowerCase().includes('forfait')) {
+                            response = "Nous proposons 5 packs différents : Standard (3 000 $), Bronze (3 700 $), Silver (4 000 $), Gold (5 000 $) et Platinum (6 000 $). Lequel vous intéresse ?";
+                        } else {
+                            response = "Merci pour votre message. Pour toute question spécifique concernant nos services, tarifs ou disponibilités, n'hésitez pas à nous contacter directement au 0997024531. Nous nous ferons un plaisir de vous renseigner !";
+                        }
+                        
+                        addMessageToChat(response, 'ai');
+                    }, 1000);
+                }
+            }
+
+            function addMessageToChat(message, sender) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `chat-message ${sender === 'user' ? 'user-message' : 'ai-message'}`;
+                messageDiv.textContent = message;
+                chatLog.appendChild(messageDiv);
+                chatLog.scrollTop = chatLog.scrollHeight;
+            }
+        });
+    </script>
+</body>
+</html>
